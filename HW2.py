@@ -136,14 +136,63 @@ def infix_expression(root):
     return ["("] + infix_expression(l) + [v] + infix_expression(r) + [")"]
 
 
+def csv_to_list_and_ans(filename):
+    with open(filename, 'r') as file:
+        data_list = []
+        ans=[]
+        for line in file:
+           line = line.strip().replace('"', '').split(",")
+           ans.append(line[-1]) 
+           line=line[0].split()  # remove extra spaces
+           data_list.append(line)  # all columns except last one as input
+            # assuming last column is expected result
+    return data_list ,ans
+
+def apply_op(node,right,left,stack):
+    if node == "+":
+        stack.append(left + right)
+    elif node == "-":
+        stack.append(left - right)
+    elif node == "*":
+        stack.append(left * right)
+    else:
+        try:
+            stack.append(int(left / right))
+        except ZeroDivisionError:   ##### Handing in case of division by zero
+            stack.append("DIVZERO")  
+    return stack
+
+def evaluate_postfix(filename) -> dict:
+    operators = ['+', '-', '*', '/', '(', ')']
+    computed_answer = {}
+    input_list, ans = csv_to_list_and_ans(filename)
+    for i, (input, actual_ans) in enumerate(zip(input_list, ans)):
+        stack = []
+        for node in input:
+            if node not in operators:
+                stack.append(node)
+            else:
+                if len(stack)<2:
+                    raise ValueError('Invalid expression:not enough operands')
+                right = stack.pop()
+                left = stack.pop()
+                stack=apply_op(node,int(right),int(left),stack)
+        if len(stack)!=1:
+            raise ValueError('Invalid expression: missing operands')
+        if actual_ans==str(stack[0]):
+            computed_answer[str(i)] = f"test case {i+1} passed successfully with final value: {stack[0]}"
+               
+    
+    return computed_answer
+
 def main():
-    print("Solution for Problem 1: Constructing Expression Tree")
+    print("\n----------Solution for Problem 1: Constructing Expression Tree-------------\n")
     filename = 'data\p1_construct_tree.csv'
     root = construct_tree(filename)
     for key, value in root.items():
         print(f'Root node for expression : {int(key)+1}: {value}')
 
-    print("Solution for Problem 2: Constructing Expression Tree")
+    print("\n----------------Solution for Problem 2: Constructing Expression Tree-------------\n")
     
     filename_2 = "data/p2_traversals.csv"
     rows = read_rows(filename_2)
@@ -182,20 +231,12 @@ def main():
     
 
 
-
-   
-
-
-
-
-
-
-
-
-
-
-
-
+    print("\n------------Solution for Problem 3: Evaluating Postfix Expressions-------------\n")
+    filename_3="data/p3_eval_postfix.csv"
+    answers=evaluate_postfix(filename_3)
+    for key, value in answers.items():
+        print(f"Test case {int(key)+1}: {value}")
+    
     return 0
 
 
